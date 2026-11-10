@@ -2306,7 +2306,7 @@ final class OverlayPanelController {
 
     private func shouldCaptureKeyboard(for phase: AppPhase) -> Bool {
         switch phase {
-        case .transcribing, .done:
+        case .transcribing, .done, .error:
             true
         default:
             false
