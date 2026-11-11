@@ -2410,6 +2410,7 @@ struct OverlayView: View {
                         .font(.system(size: 12))
                         .lineLimit(8)
                         .fixedSize(horizontal: false, vertical: true)
+                        .textSelection(.enabled)
                 } else {
                     Text(appState.phase.subtitle)
                         .foregroundStyle(.white.opacity(0.7))
