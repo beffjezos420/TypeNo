@@ -3,6 +3,7 @@ import ApplicationServices
 @preconcurrency import AVFoundation
 import Combine
 import Foundation
+import ServiceManagement
 import SwiftUI
 
 // MARK: - Localization Helper
@@ -107,9 +108,10 @@ struct MicrophoneOption: Equatable {
 }
 
 extension UserDefaults {
-    private static let modifierKey   = "ai.marswave.typeno.hotkeyModifier"
-    private static let triggerKey    = "ai.marswave.typeno.triggerMode"
-    private static let microphoneKey = "ai.marswave.typeno.microphone"
+    private static let modifierKey     = "ai.marswave.typeno.hotkeyModifier"
+    private static let triggerKey      = "ai.marswave.typeno.triggerMode"
+    private static let microphoneKey   = "ai.marswave.typeno.microphone"
+    private static let launchAtLoginKey = "ai.marswave.typeno.launchAtLogin"
 
     var hotkeyModifier: HotkeyModifier {
         get {
@@ -138,6 +140,11 @@ extension UserDefaults {
                 removeObject(forKey: Self.microphoneKey)
             }
         }
+    }
+
+    var launchAtLogin: Bool {
+        get { bool(forKey: Self.launchAtLoginKey) }
+        set { set(newValue, forKey: Self.launchAtLoginKey) }
     }
 }
 
@@ -1994,6 +2001,13 @@ final class StatusItemController: NSObject {
 
         menu.addItem(NSMenuItem.separator())
 
+        let launchItem = NSMenuItem(title: L("Launch at Login", "登录时启动"), action: #selector(toggleLaunchAtLogin(_:)), keyEquivalent: "")
+        launchItem.target = self
+        launchItem.state = UserDefaults.standard.launchAtLogin ? .on : .off
+        menu.addItem(launchItem)
+
+        menu.addItem(NSMenuItem.separator())
+
         let updateItem = NSMenuItem(title: L("Check for Updates...", "检查更新..."), action: #selector(checkForUpdates), keyEquivalent: "")
         updateItem.target = self
         updateItem.tag = MenuTag.update
@@ -2131,6 +2145,23 @@ final class StatusItemController: NSObject {
 
     @objc private func checkForUpdates() {
         appState?.onUpdateRequest?()
+    }
+
+    @objc private func toggleLaunchAtLogin(_ sender: NSMenuItem) {
+        let newValue = sender.state != .on
+        sender.state = newValue ? .on : .off
+        UserDefaults.standard.launchAtLogin = newValue
+        do {
+            if newValue {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+        } catch {
+            // Revert on failure
+            sender.state = !newValue ? .on : .off
+            UserDefaults.standard.launchAtLogin = !newValue
+        }
     }
 
     func setUpdateAvailable(_ version: String) {
