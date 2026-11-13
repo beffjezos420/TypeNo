@@ -2073,6 +2073,10 @@ final class StatusItemController: NSObject {
         switch phase {
         case .recording:
             item.title = L("Stop Recording", "停止录音")
+        case .transcribing, .error:
+            item.title = L("Cancel", "取消")
+        case .done:
+            item.title = L("Insert  \(sym)", "插入  \(sym)")
         default:
             item.title = L("Record  \(sym)", "录音  \(sym)")
         }
